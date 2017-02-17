@@ -27,6 +27,7 @@
 #define PRINTER_FIRMWARE 268
 
 #include "Arduino.h"
+#include <limits.h>
 
 // Barcode types and charsets
 #if PRINTER_FIRMWARE >= 264
@@ -153,6 +154,8 @@ class Adafruit_Thermal : public Print {
     setCharset(uint8_t val=0),
     setCodePage(uint8_t val=0),
     setDefault(),
+    setFontA(),
+    setFontB(),
     setLineHeight(int val=30),
     setMaxChunkHeight(int val=256),
     setSize(char value),
@@ -191,6 +194,7 @@ class Adafruit_Thermal : public Print {
   boolean
     dtrEnabled;    // True if DTR pin set & printer initialized
   unsigned long
+    resumeTimeMs,  // don't wait if millis() exceeds this 
     resumeTime,    // Wait until micros() exceeds this before sending byte
     dotPrintTime,  // Time to print a single dot line, in microseconds
     dotFeedTime;   // Time to feed a single dot line, in microseconds

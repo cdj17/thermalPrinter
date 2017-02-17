@@ -60,18 +60,36 @@ Adafruit_Thermal::Adafruit_Thermal(Stream *s, uint8_t dtr) :
 
 // This method sets the estimated completion time for a just-issued task.
 void Adafruit_Thermal::timeoutSet(unsigned long x) {
-  if(!dtrEnabled) resumeTime = micros() + x;
-}
-
-// This function waits (if necessary) for the prior task to complete.
-void Adafruit_Thermal::timeoutWait() {
-  if(dtrEnabled) {
-    while(digitalRead(dtrPin) == HIGH);
-  } else {
-    while((long)(micros() - resumeTime) < 0L); // (syntax is rollover-proof)
+  if(!dtrEnabled) { 
+    resumeTime = micros() + x; 
+    resumeTimeMs = millis() + (x / 1000);
+    }
   }
-}
 
+#define MAX_TP_WAIT 10000         /* maximum wait time (in ms) for thermal printer to print a characater */
+// This function waits (if necessary) for the prior task to complete.
+void Adafruit_Thermal::timeoutWait() { 
+  if(dtrEnabled) {
+    while(digitalRead(dtrPin) == HIGH); 
+    } 
+  else {
+    boolean doWait = false;
+    if (resumeTimeMs > millis()) {
+      if (resumeTimeMs - millis() < MAX_TP_WAIT) { 
+        doWait = true;
+        }
+      }
+    else {
+      if (ULONG_MAX - millis() + resumeTimeMs < MAX_TP_WAIT) {
+        doWait = true; 
+        } 
+      }
+    if (doWait) {
+      while((long)(micros() - resumeTime) < 0L); // (syntax is rollover-proof)
+      }
+    }
+  } // end of timeoutWait function
+  
 // Printer performance may vary based on the power supply voltage,
 // thickness of paper, phase of the moon and other seemingly random
 // variables.  This method sets the times (in microseconds) for the
@@ -620,6 +638,14 @@ void Adafruit_Thermal::tab() {
 
 void Adafruit_Thermal::setCharSpacing(int spacing) {
   writeBytes(ASCII_ESC, ' ', spacing);
+}
+
+void Adafruit_Thermal::setFontA() {
+  writeBytes(ASCII_ESC, '!', 0x00);
+}
+
+void Adafruit_Thermal::setFontB() {
+  writeBytes(ASCII_ESC, '!', 0x01);
 }
 
 // -------------------------------------------------------------------------
